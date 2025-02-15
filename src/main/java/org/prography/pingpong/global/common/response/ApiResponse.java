@@ -1,4 +1,4 @@
-package org.prography.pingpong.global.common;
+package org.prography.pingpong.global.common.response;
 
 import lombok.Data;
 
