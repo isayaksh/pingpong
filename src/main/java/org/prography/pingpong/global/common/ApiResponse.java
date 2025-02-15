@@ -1,5 +1,8 @@
 package org.prography.pingpong.global.common;
 
+import lombok.Data;
+
+@Data
 public class ApiResponse<T> {
     private Integer code;
     private String message;
@@ -9,7 +12,7 @@ public class ApiResponse<T> {
         return new ApiResponse<>(200, "API 요청이 성공했습니다.", result);
     }
 
-    public static ApiResponse success() {
+    public static ApiResponse<Void> success() {
         return success(null);
     }
 
@@ -17,7 +20,7 @@ public class ApiResponse<T> {
         return new ApiResponse<>(201, "불가능한 요청입니다.", result);
     }
 
-    public static ApiResponse fail() {
+    public static ApiResponse<Void> fail() {
         return fail(null);
     }
 
@@ -25,14 +28,13 @@ public class ApiResponse<T> {
         return new ApiResponse<>(500, "에러가 발생했습니다.", result);
     }
 
-    public static ApiResponse error() {
+    public static ApiResponse<Void> error() {
         return error(null);
     }
 
-    private ApiResponse(Integer code, String message, T result) {
+    public ApiResponse(Integer code, String message, T result) {
         this.code = code;
         this.message = message;
         this.result = result;
     }
-
 }
