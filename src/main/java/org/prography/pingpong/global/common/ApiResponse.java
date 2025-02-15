@@ -32,7 +32,7 @@ public class ApiResponse<T> {
         return error(null);
     }
 
-    public ApiResponse(Integer code, String message, T result) {
+    private ApiResponse(Integer code, String message, T result) {
         this.code = code;
         this.message = message;
         this.result = result;
