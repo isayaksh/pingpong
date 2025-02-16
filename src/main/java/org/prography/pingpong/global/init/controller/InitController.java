@@ -24,8 +24,8 @@ public class InitController {
 
     @PostMapping
     public ApiResponse init(@RequestBody @Validated InitReqDto initReqDto) throws Exception {
-        initService.init(initReqDto.seed(), initReqDto.quantity());
-        return ApiResponse.success();
+        List<User> init = initService.init(initReqDto.seed(), initReqDto.quantity());
+        return ApiResponse.success(init);
     }
 
 }

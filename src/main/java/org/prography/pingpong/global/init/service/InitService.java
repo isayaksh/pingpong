@@ -21,7 +21,7 @@ public class InitService {
     private final RoomRepository roomRepository;
 
     @Transactional
-    public void init(Integer seed, Integer quantity) throws Exception {
+    public List<User> init(Integer seed, Integer quantity) throws Exception {
 
         /*
          * 모든 회원 정보 및 방 정보를 삭제
@@ -57,7 +57,7 @@ public class InitService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        userRepository.saveAllAndFlush(users);
+        return userRepository.saveAllAndFlush(users);
 
     }
 
