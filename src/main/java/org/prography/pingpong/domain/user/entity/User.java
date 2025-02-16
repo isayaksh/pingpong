@@ -19,6 +19,7 @@ public class User {
     @Column(name = "userId")
     private Integer id;
 
+    @OrderColumn
     private Integer fakerId;
 
     private String name;
