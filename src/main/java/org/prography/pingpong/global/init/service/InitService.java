@@ -8,7 +8,6 @@ import org.prography.pingpong.global.init.dto.FakerApiResDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.*;
 
@@ -21,7 +20,7 @@ public class InitService {
     private final RoomRepository roomRepository;
 
     @Transactional
-    public List<User> init(Integer seed, Integer quantity) throws Exception {
+    public void init(Integer seed, Integer quantity) throws Exception {
 
         /*
          * 모든 회원 정보 및 방 정보를 삭제
@@ -57,7 +56,7 @@ public class InitService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        return userRepository.saveAllAndFlush(users);
+        userRepository.saveAllAndFlush(users);
 
     }
 
