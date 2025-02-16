@@ -12,5 +12,7 @@ spring:
       hibernate:
         format_sql: true
         show_sql: true
+        default_batch_fetch_size: 100
+
   jackson:
     default-property-inclusion: non_null  # null 값 필드를 JSON에서 제외
