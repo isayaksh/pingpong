@@ -15,11 +15,11 @@ public class UserRoom {
 
     @OneToOne
     @JoinColumn(name = "roomId")
-    private Room room_id;
+    private Room room;
 
     @OneToOne
     @JoinColumn(name = "userId")
-    private User user_id;
+    private User user;
 
     @Enumerated(EnumType.STRING)
     private Team team;

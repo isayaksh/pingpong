@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.prography.pingpong.domain.room.repository.RoomRepository;
 import org.prography.pingpong.domain.user.entity.User;
 import org.prography.pingpong.domain.user.repository.UserRepository;
+import org.prography.pingpong.global.exception.ApiException;
 import org.prography.pingpong.global.init.dto.FakerApiResDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +48,7 @@ public class InitService {
         /*
          * 회원 정보 저장
          */
-        if(fakerApiResDto.code() != 200) throw new IllegalStateException("service");    // API 호출 실패
+        if(fakerApiResDto.code() != 200) throw new ApiException("InitService.init");    // API 호출 실패
 
         List<User> users = Optional.ofNullable(fakerApiResDto.data())
                 .orElse(Collections.emptyList())

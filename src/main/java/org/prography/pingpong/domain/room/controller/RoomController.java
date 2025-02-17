@@ -1,15 +1,21 @@
 package org.prography.pingpong.domain.room.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.prography.pingpong.domain.room.dto.*;
+import org.prography.pingpong.domain.room.service.RoomService;
 import org.prography.pingpong.global.common.response.ApiResponse;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 public class RoomController {
+
+    private final RoomService roomService;
 
     @PostMapping("/room")
     public ApiResponse createRoom(@RequestBody @Validated RoomCreateReqDto roomCreateReqDto) {
+        roomService.createRoom(roomCreateReqDto);
         return ApiResponse.success();
     }
 
