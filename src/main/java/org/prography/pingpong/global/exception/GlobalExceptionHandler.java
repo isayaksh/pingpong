@@ -12,9 +12,9 @@ public class GlobalExceptionHandler {
         return ApiResponse.error();
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ApiResponse handleIllegalArgumentException(IllegalArgumentException e) {
-        return ApiResponse.error(e.getMessage());
+    @ExceptionHandler(ApiException.class)
+    public ApiResponse handleApiException(ApiException e) {
+        return ApiResponse.fail();
     }
 
 }
