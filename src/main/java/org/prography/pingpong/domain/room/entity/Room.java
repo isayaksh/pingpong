@@ -24,7 +24,7 @@ public class Room {
     private String title;
 
     @OneToOne
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "userId")
     private User host;
 
     @Enumerated(EnumType.STRING)
