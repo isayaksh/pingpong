@@ -1,10 +1,15 @@
 package org.prography.pingpong.domain.room.service;
 
 import lombok.RequiredArgsConstructor;
+import org.prography.pingpong.domain.room.dto.RoomAttentionReqDto;
 import org.prography.pingpong.domain.room.dto.RoomCreateReqDto;
 import org.prography.pingpong.domain.room.dto.RoomDetailResDto;
 import org.prography.pingpong.domain.room.dto.RoomListResDto;
 import org.prography.pingpong.domain.room.entity.Room;
+import org.prography.pingpong.domain.room.entity.UserRoom;
+import org.prography.pingpong.domain.room.entity.enums.RoomStatus;
+import org.prography.pingpong.domain.room.entity.enums.RoomType;
+import org.prography.pingpong.domain.room.entity.enums.Team;
 import org.prography.pingpong.domain.room.repository.RoomRepository;
 import org.prography.pingpong.domain.room.repository.UserRoomRepository;
 import org.prography.pingpong.domain.user.entity.User;
@@ -34,9 +39,7 @@ public class RoomService {
     @Transactional
     public void createRoom(RoomCreateReqDto roomCreateReqDto) {
 
-        /*
-         * 방을 생성하려고 하는 user(userId)의 상태가 활성(ACTIVE)상태일 때만, 방을 생성
-         */
+        //방을 생성하려고 하는 user(userId)의 상태가 활성(ACTIVE)상태일 때만, 방을 생성
         Integer userId = roomCreateReqDto.userId();
         User findUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("RoomService.createRoom"));
@@ -44,18 +47,10 @@ public class RoomService {
         if(!findUser.getStatus().equals(UserStatus.ACTIVE))
             throw new ApiException("RoomService.createRoom");
 
-        /*
-         * 방을 생성하려고 하는 user(userId)가 현재 참여한 방이 있다면, 방생성 X
-         */
-        if(roomRepository.existsByHostId(userId))
-            throw new ApiException("RoomService.createRoom");
+        //방을 생성하려고 하는 user(userId)가 현재 참여한 방이 있다면, 방생성 X
+        isJoinRoom(userId);
 
-        if(userRoomRepository.existsByUserId(userId))
-            throw new ApiException("RoomService.createRoom");
-
-        /*
-         * 방은 초기에 대기(WAIT) 상태로 생성
-         */
+         //방은 초기에 대기(WAIT) 상태로 생성
         Room room = roomCreateReqDto.create(findUser);
         roomRepository.save(room);
 
@@ -71,6 +66,55 @@ public class RoomService {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new ApiException("RoomService.find"));
         return RoomDetailResDto.create(room);
+    }
+
+    @Transactional
+    public void attendRoom(Integer roomId, RoomAttentionReqDto roomAttentionReqDto) {
+
+        // 대기(WAIT) 상태인 방에만 참가 가능
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ApiException("RoomService.attendRoom"));
+        if(!room.getStatus().equals(RoomStatus.WAIT))
+            throw new ApiException("RoomService.attendRoom");
+
+        // 유저(userId)가 활성(ACTIVE) 상태일 때만, 방에 참가 가능
+        User user = userRepository.findById(roomAttentionReqDto.userId())
+                .orElseThrow(() -> new ApiException("RoomService.attendRoom"));
+        if(!user.getStatus().equals(UserStatus.ACTIVE))
+            throw new ApiException("RoomService.attendRoom");
+
+        //방을 생성하려고 하는 user(userId)가 현재 참여한 방이 있다면, 방생성 X
+        isJoinRoom(roomAttentionReqDto.userId());
+
+        // 참가하고자 하는 방(roomId)의 정원이 미달일 때만, 참가가 가능
+        int userCount = userRoomRepository.countByRoomId(roomId);
+        System.out.println("userCount : " + userCount);
+
+        if(room.getType().equals(RoomType.SINGLE) && userCount >= 1)
+            throw new ApiException("RoomService.attendRoom");
+
+        if(room.getType().equals(RoomType.DOUBLE) && userCount >= 3)
+            throw new ApiException("RoomService.attendRoom");
+
+        // userRoom 생성
+        UserRoom userRoom = UserRoom.create(room, user, generateTeam(userCount));
+        userRoomRepository.save(userRoom);
+
+    }
+
+
+    /*
+     * 유저(userId)가 현재 참여한 방이 있는지 확인
+     */
+    private void isJoinRoom(Integer userId) {
+        if(roomRepository.existsByHostId(userId))
+            throw new ApiException("RoomService.isJoinRoom");
+        if(userRoomRepository.existsByUserId(userId))
+            throw new ApiException("RoomService.isJoinRoom");
+    }
+
+    private Team generateTeam(Integer userCount) {
+        return (userCount%2 == 0) ? Team.RED : Team.BLUE;
     }
 
 }

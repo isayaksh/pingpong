@@ -35,6 +35,7 @@ public class RoomController {
     @PostMapping("/room/attention/{roomId}")
     public ApiResponse attentionRoom(@PathVariable("roomId") int roomId,
                                      @RequestBody @Validated RoomAttentionReqDto roomAttentionReqDto) {
+        roomService.attendRoom(roomId, roomAttentionReqDto);
         return ApiResponse.success();
     }
 
