@@ -23,7 +23,7 @@ public class Room {
 
     private String title;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId")
     private User host;
 

@@ -13,14 +13,43 @@ public class UserRoom {
     @Column(name="userRoomId")
     private Integer id;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "roomId")
     private Room room;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId")
     private User user;
 
     @Enumerated(EnumType.STRING)
     private Team team;
+
+    public UserRoom() {
+    }
+
+    protected UserRoom(Room room, User user, Team team) {
+        this.room = room;
+        this.user = user;
+        this.team = team;
+    }
+
+    public static UserRoom create(Room room, User user, Team team) {
+        return new UserRoom(room, user, team);
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public Team getTeam() {
+        return team;
+    }
 }
