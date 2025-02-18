@@ -2,6 +2,7 @@ package org.prography.pingpong.domain.room.service;
 
 import lombok.RequiredArgsConstructor;
 import org.prography.pingpong.domain.room.dto.RoomCreateReqDto;
+import org.prography.pingpong.domain.room.dto.RoomDetailResDto;
 import org.prography.pingpong.domain.room.dto.RoomListResDto;
 import org.prography.pingpong.domain.room.entity.Room;
 import org.prography.pingpong.domain.room.repository.RoomRepository;
@@ -64,6 +65,12 @@ public class RoomService {
         Page<Room> roomList = roomRepository.findAll(pageable);
         RoomListResDto roomListResDto = RoomListResDto.create(roomList);
         return roomListResDto;
+    }
+
+    public RoomDetailResDto find(Integer roomId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ApiException("RoomService.find"));
+        return RoomDetailResDto.create(room);
     }
 
 }

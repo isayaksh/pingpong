@@ -28,7 +28,8 @@ public class RoomController {
 
     @GetMapping("/room/{roomId}")
     public ApiResponse roomDetail(@PathVariable("roomId") int roomId) {
-        return ApiResponse.success();
+        RoomDetailResDto roomDetailResDto = roomService.find(roomId);
+        return ApiResponse.success(roomDetailResDto);
     }
 
     @PostMapping("/room/attention/{roomId}")
