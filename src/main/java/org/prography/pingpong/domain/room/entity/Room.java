@@ -28,7 +28,7 @@ public class Room {
     private User host;
 
     @Enumerated(EnumType.STRING)
-    private RoomType room_type;
+    private RoomType type;
 
     @Enumerated(EnumType.STRING)
     private RoomStatus status;
@@ -45,21 +45,21 @@ public class Room {
     }
 
     @Builder
-    private Room(Integer id, String title, User host, RoomType room_type, RoomStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private Room(Integer id, String title, User host, RoomType type, RoomStatus status, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.title = title;
         this.host = host;
-        this.room_type = room_type;
+        this.type = type;
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public static Room create(String title, User host, RoomType room_type, RoomStatus status) {
+    public static Room create(String title, User host, RoomType type, RoomStatus status) {
         return Room.builder()
                 .title(title)
                 .host(host)
-                .room_type(room_type)
+                .type(type)
                 .status(status)
                 .build();
     }
@@ -76,8 +76,8 @@ public class Room {
         return host;
     }
 
-    public RoomType getRoom_type() {
-        return room_type;
+    public RoomType getType() {
+        return type;
     }
 
     public RoomStatus getStatus() {

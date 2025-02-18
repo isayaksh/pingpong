@@ -23,7 +23,7 @@ public record RoomListResDto(
                     room.getId(),
                     room.getTitle(),
                     room.getHost().getId(),
-                    room.getRoom_type(),
+                    room.getType(),
                     room.getStatus().name()
             );
         }
