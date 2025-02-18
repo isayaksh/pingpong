@@ -2,6 +2,7 @@ package org.prography.pingpong.domain.room.service;
 
 import lombok.RequiredArgsConstructor;
 import org.prography.pingpong.domain.room.dto.RoomCreateReqDto;
+import org.prography.pingpong.domain.room.dto.RoomListResDto;
 import org.prography.pingpong.domain.room.entity.Room;
 import org.prography.pingpong.domain.room.repository.RoomRepository;
 import org.prography.pingpong.domain.room.repository.UserRoomRepository;
@@ -9,6 +10,8 @@ import org.prography.pingpong.domain.user.entity.User;
 import org.prography.pingpong.domain.user.entity.enums.UserStatus;
 import org.prography.pingpong.domain.user.repository.UserRepository;
 import org.prography.pingpong.global.exception.ApiException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +58,12 @@ public class RoomService {
         Room room = roomCreateReqDto.create(findUser);
         roomRepository.save(room);
 
+    }
+
+    public RoomListResDto findAll(Pageable pageable) {
+        Page<Room> roomList = roomRepository.findAll(pageable);
+        RoomListResDto roomListResDto = RoomListResDto.create(roomList);
+        return roomListResDto;
     }
 
 }

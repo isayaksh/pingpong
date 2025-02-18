@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.prography.pingpong.domain.room.dto.*;
 import org.prography.pingpong.domain.room.service.RoomService;
 import org.prography.pingpong.global.common.response.ApiResponse;
+import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +21,9 @@ public class RoomController {
     }
 
     @GetMapping("/room")
-    public ApiResponse room(@RequestParam("size") int size, @RequestParam("page") int page) {
-        return ApiResponse.success();
+    public ApiResponse room(Pageable pageable) {
+        RoomListResDto roomListResDto = roomService.findAll(pageable);
+        return ApiResponse.success(roomListResDto);
     }
 
     @GetMapping("/room/{roomId}")
