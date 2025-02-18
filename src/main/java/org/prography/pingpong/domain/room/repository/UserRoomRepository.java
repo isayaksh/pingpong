@@ -9,4 +9,6 @@ public interface UserRoomRepository extends JpaRepository<UserRoom, Integer> {
 
     boolean existsByUserId(Integer userId);
 
+    int countByRoomId(Integer roomId);
+
 }
