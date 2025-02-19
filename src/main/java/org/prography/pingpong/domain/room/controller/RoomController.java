@@ -49,6 +49,7 @@ public class RoomController {
     @PutMapping("/room/start/{roomId}")
     public ApiResponse startRoom(@PathVariable("roomId") int roomId,
                                  @RequestBody @Validated RoomStartReqDto roomStartReqDto) {
+        roomService.startRoom(roomId, roomStartReqDto);
         return ApiResponse.success();
     }
 

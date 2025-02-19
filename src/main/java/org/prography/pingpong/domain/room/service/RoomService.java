@@ -131,6 +131,29 @@ public class RoomService {
 
     }
 
+    @Transactional
+    public void startRoom(int roomId, RoomStartReqDto roomStartReqDto) {
+        // 호스트인 유저만 게임을 시작 가능
+        Room room = roomRepository.findByIdAndHostId(roomId, roomStartReqDto.userId())
+                .orElseThrow(() -> new ApiException("RoomService.startRoom"));
+
+        // 방 정원이 방의 타입에 맞게 모두 꽉 찬 상태에서만 게임 시작
+        int userCount = userRoomRepository.countByRoomId(roomId);
+        if(room.getType().equals(RoomType.SINGLE) && userCount != 1) throw new ApiException("RoomService.startRoom");
+        if(room.getType().equals(RoomType.DOUBLE) && userCount != 3) throw new ApiException("RoomService.startRoom");
+
+        // 현재 방의 상태가 대기(WAIT) 상태일 때만 시작
+        if(!room.getStatus().equals(RoomStatus.WAIT))
+            throw new ApiException("RoomService.startRoom");
+
+        // 방의 상태를 진행중(PROGRESS) 상태로 변경
+        room.changeStatus(RoomStatus.PROGRESS);
+
+
+
+        // 대기(WAIT) 상태인 방만 ��임을 시작 가능
+    }
+
 
     /*
      * 유저(userId)가 현재 참여한 방이 있는지 확인
@@ -144,6 +167,5 @@ public class RoomService {
     private Team generateTeam(Integer userCount) {
         return (userCount%2 == 0) ? Team.RED : Team.BLUE;
     }
-
 
 }
