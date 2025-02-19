@@ -42,6 +42,7 @@ public class RoomController {
     @PostMapping("/room/out/{roomId}")
     public ApiResponse outRoom(@PathVariable("roomId") int roomId,
                                @RequestBody @Validated RoomOutReqDto roomOutReqDto) {
+        roomService.outRoom(roomId, roomOutReqDto);
         return ApiResponse.success();
     }
 
