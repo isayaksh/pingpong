@@ -9,4 +9,6 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
 
     boolean existsByHostId(Integer hostId);
 
+    boolean existsByIdAndHostId(Integer userId, Integer roomId);
+
 }
