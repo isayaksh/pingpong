@@ -15,8 +15,12 @@ import org.prography.pingpong.domain.user.repository.UserRepository;
 import org.prography.pingpong.global.exception.ApiException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,6 +30,8 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final UserRoomRepository userRoomRepository;
     private final UserRepository userRepository;
+
+    private final ThreadPoolTaskScheduler taskScheduler;
 
 
     @Transactional
@@ -131,6 +137,29 @@ public class RoomService {
 
     }
 
+    @Transactional
+    public void startRoom(int roomId, RoomStartReqDto roomStartReqDto) {
+        // 호스트인 유저만 게임을 시작 가능
+        Room room = roomRepository.findByIdAndHostId(roomId, roomStartReqDto.userId())
+                .orElseThrow(() -> new ApiException("RoomService.startRoom"));
+
+        // 방 정원이 방의 타입에 맞게 모두 꽉 찬 상태에서만 게임 시작
+        int userCount = userRoomRepository.countByRoomId(roomId);
+        if(room.getType().equals(RoomType.SINGLE) && userCount != 1) throw new ApiException("RoomService.startRoom");
+        if(room.getType().equals(RoomType.DOUBLE) && userCount != 3) throw new ApiException("RoomService.startRoom");
+
+        // 현재 방의 상태가 대기(WAIT) 상태일 때만 시작
+        if(!room.getStatus().equals(RoomStatus.WAIT))
+            throw new ApiException("RoomService.startRoom");
+
+        // 방의 상태를 진행중(PROGRESS) 상태로 변경
+        room.changeStatus(RoomStatus.PROGRESS);
+
+        // 게임시작이 된 방은 1분 뒤 종료(FINISH) 상태로 변경
+        scheduleRoomStatusChanged(room, RoomStatus.FINISH);
+
+    }
+
 
     /*
      * 유저(userId)가 현재 참여한 방이 있는지 확인
@@ -145,5 +174,11 @@ public class RoomService {
         return (userCount%2 == 0) ? Team.RED : Team.BLUE;
     }
 
-
+    @Async
+    private void scheduleRoomStatusChanged(Room room, RoomStatus roomStatus) {
+        taskScheduler.schedule(() -> {
+            room.changeStatus(roomStatus);
+            roomRepository.save(room);
+        }, Instant.now().plusSeconds(60));
+    }
 }
