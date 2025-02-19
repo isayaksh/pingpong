@@ -1,10 +1,7 @@
 package org.prography.pingpong.domain.room.service;
 
 import lombok.RequiredArgsConstructor;
-import org.prography.pingpong.domain.room.dto.RoomAttentionReqDto;
-import org.prography.pingpong.domain.room.dto.RoomCreateReqDto;
-import org.prography.pingpong.domain.room.dto.RoomDetailResDto;
-import org.prography.pingpong.domain.room.dto.RoomListResDto;
+import org.prography.pingpong.domain.room.dto.*;
 import org.prography.pingpong.domain.room.entity.Room;
 import org.prography.pingpong.domain.room.entity.UserRoom;
 import org.prography.pingpong.domain.room.entity.enums.RoomStatus;
@@ -48,7 +45,8 @@ public class RoomService {
             throw new ApiException("RoomService.createRoom");
 
         //방을 생성하려고 하는 user(userId)가 현재 참여한 방이 있다면, 방생성 X
-        isJoinRoom(userId);
+        if(isJoinRoom(userId))
+            throw new ApiException("RoomService.createRoom");
 
          //방은 초기에 대기(WAIT) 상태로 생성
         Room room = roomCreateReqDto.create(findUser);
@@ -84,7 +82,8 @@ public class RoomService {
             throw new ApiException("RoomService.attendRoom");
 
         //방을 생성하려고 하는 user(userId)가 현재 참여한 방이 있다면, 방생성 X
-        isJoinRoom(roomAttentionReqDto.userId());
+        if(isJoinRoom(roomAttentionReqDto.userId()))
+            throw new ApiException("RoomService.attendRoom");
 
         // 참가하고자 하는 방(roomId)의 정원이 미달일 때만, 참가가 가능
         int userCount = userRoomRepository.countByRoomId(roomId);
@@ -102,19 +101,49 @@ public class RoomService {
 
     }
 
+    @Transactional
+    public void outRoom(int roomId, RoomOutReqDto roomOutReqDto) {
+
+        // 유저(userId)가 현재 해당 방(roomId)에 참가한 상태일 때만, 나가기 가능
+        if(!roomRepository.existsByIdAndHostId(roomId, roomOutReqDto.userId()) &&
+                !userRoomRepository.existsByUserIdAndRoomId(roomOutReqDto.userId(), roomId))
+            throw new ApiException("RoomService.outRoom");
+
+        // 이미 시작(PROGRESS) 상태인 방이거나 끝난(FINISH) 상태의 방은 나가기 불가능
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ApiException("RoomService.outRoom"));
+
+        if(!room.getStatus().equals(RoomStatus.WAIT))
+            throw new ApiException("RoomService.outRoom");
+
+        // 호스트가 방을 나가게 되면
+        if(room.getHost().getId().equals(roomOutReqDto.userId())) {
+            // 방에 있던 모든 사람도 해당 방에서 나가게 됩니다.
+            userRoomRepository.deleteByRoomId(roomId);
+
+            // 해당 방은 끝난(FINISH) 상태가 됩니다.
+            room.changeStatus(RoomStatus.FINISH);
+        }
+        else {
+            // 유저 방에서 나가기
+            userRoomRepository.deleteByUserId(roomOutReqDto.userId());
+        }
+
+    }
+
 
     /*
      * 유저(userId)가 현재 참여한 방이 있는지 확인
      */
-    private void isJoinRoom(Integer userId) {
-        if(roomRepository.existsByHostId(userId))
-            throw new ApiException("RoomService.isJoinRoom");
-        if(userRoomRepository.existsByUserId(userId))
-            throw new ApiException("RoomService.isJoinRoom");
+    private boolean isJoinRoom(Integer userId) {
+        if(roomRepository.existsByHostId(userId) || userRoomRepository.existsByUserId(userId))
+            return true;
+        return false;
     }
 
     private Team generateTeam(Integer userCount) {
         return (userCount%2 == 0) ? Team.RED : Team.BLUE;
     }
+
 
 }

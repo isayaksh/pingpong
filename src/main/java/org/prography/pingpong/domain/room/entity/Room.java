@@ -64,6 +64,11 @@ public class Room {
                 .build();
     }
 
+    public void changeStatus(RoomStatus status) {
+        this.status = status;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public Integer getId() {
         return id;
     }
