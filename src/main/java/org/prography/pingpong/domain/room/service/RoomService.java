@@ -15,8 +15,12 @@ import org.prography.pingpong.domain.user.repository.UserRepository;
 import org.prography.pingpong.global.exception.ApiException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,6 +30,8 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final UserRoomRepository userRoomRepository;
     private final UserRepository userRepository;
+
+    private final ThreadPoolTaskScheduler taskScheduler;
 
 
     @Transactional
@@ -149,9 +155,9 @@ public class RoomService {
         // 방의 상태를 진행중(PROGRESS) 상태로 변경
         room.changeStatus(RoomStatus.PROGRESS);
 
+        // 게임시작이 된 방은 1분 뒤 종료(FINISH) 상태로 변경
+        scheduleRoomStatusChanged(room, RoomStatus.FINISH);
 
-
-        // 대기(WAIT) 상태인 방만 ��임을 시작 가능
     }
 
 
@@ -168,4 +174,11 @@ public class RoomService {
         return (userCount%2 == 0) ? Team.RED : Team.BLUE;
     }
 
+    @Async
+    private void scheduleRoomStatusChanged(Room room, RoomStatus roomStatus) {
+        taskScheduler.schedule(() -> {
+            room.changeStatus(roomStatus);
+            roomRepository.save(room);
+        }, Instant.now().plusSeconds(60));
+    }
 }
