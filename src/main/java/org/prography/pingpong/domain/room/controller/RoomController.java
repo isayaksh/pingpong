@@ -59,8 +59,8 @@ public class RoomController {
     @PutMapping("/team/{roomId}")
     public ApiResponse changeTeam(@PathVariable("roomId") int roomId,
                                   @RequestBody @Validated TeamChangeReqDto teamChangeReqDto) {
-        UserRoomDto userRoomDto = roomService.changeTeam(roomId, teamChangeReqDto);
-        return ApiResponse.success(userRoomDto);
+        roomService.changeTeam(roomId, teamChangeReqDto);
+        return ApiResponse.success();
     }
 
 }

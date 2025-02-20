@@ -166,7 +166,7 @@ public class RoomService {
     }
 
     @Transactional
-    public UserRoomDto changeTeam(int roomId, TeamChangeReqDto teamChangeReqDto) {
+    public void changeTeam(int roomId, TeamChangeReqDto teamChangeReqDto) {
 
         // 유저(userId)가 현재 해당 방(roomId)에 참가한 상태에서만 팀 변경이 가능
         if(!isJoinRoom(teamChangeReqDto.userId()))
@@ -203,8 +203,6 @@ public class RoomService {
 
         // 유저(userId)가 현재 속한 팀 기준 반대 팀으로 변경
         userRoom.changeTeam();
-
-        return UserRoomDto.create(userRoom);
 
     }
 
