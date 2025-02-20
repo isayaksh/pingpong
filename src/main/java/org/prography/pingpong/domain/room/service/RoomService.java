@@ -34,12 +34,7 @@ public class RoomService {
     private final UserRepository userRepository;
 
     private final ThreadPoolTaskScheduler taskScheduler;
-
-
-    @Transactional
-    public void deleteAll() {
-        roomRepository.deleteAll();
-    }
+    private final RoomStatusService roomStatusService;
 
     @Transactional
     public void createRoom(RoomCreateReqDto roomCreateReqDto) {
@@ -150,8 +145,8 @@ public class RoomService {
 
         // 방 정원이 방의 타입에 맞게 모두 꽉 찬 상태에서만 게임 시작
         int userCount = userRoomRepository.countByRoomId(roomId);
-        if(room.getType().equals(RoomType.SINGLE) && userCount != 1) throw new ApiException("RoomService.startRoom");
-        if(room.getType().equals(RoomType.DOUBLE) && userCount != 3) throw new ApiException("RoomService.startRoom");
+        if(room.getType().equals(RoomType.SINGLE) && userCount != 2) throw new ApiException("RoomService.startRoom");
+        if(room.getType().equals(RoomType.DOUBLE) && userCount != 4) throw new ApiException("RoomService.startRoom");
 
         // 현재 방의 상태가 대기(WAIT) 상태일 때만 시작
         if(!room.getStatus().equals(RoomStatus.WAIT))
@@ -211,7 +206,7 @@ public class RoomService {
      * 유저(userId)가 현재 참여한 방이 있는지 확인
      */
     private boolean isJoinRoom(Integer userId) {
-        if(roomRepository.existsByHostId(userId) || userRoomRepository.existsByUserId(userId))
+        if(userRoomRepository.existsByUserId(userId) || roomRepository.existsByHostIdAndStatus(userId, RoomStatus.WAIT))
             return true;
         return false;
     }
@@ -231,8 +226,7 @@ public class RoomService {
     @Async
     private void scheduleRoomStatusChanged(Room room, RoomStatus roomStatus) {
         taskScheduler.schedule(() -> {
-            room.changeStatus(roomStatus);
-            roomRepository.save(room);
+            roomStatusService.updateRoomStatus(room, roomStatus);
         }, Instant.now().plusSeconds(60));
     }
 
