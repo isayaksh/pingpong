@@ -1,8 +1,10 @@
 package org.prography.pingpong.domain.user.dto;
 
 import org.prography.pingpong.domain.user.entity.User;
+import org.prography.pingpong.domain.user.entity.enums.UserStatus;
 import org.springframework.data.domain.Page;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record UserListResDto(
@@ -15,7 +17,9 @@ public record UserListResDto(
             Integer fakerId,
             String name,
             String email,
-            String status
+            UserStatus status,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
     ) {
         public static UserResDto create(User user) {
             return new UserResDto(
@@ -23,7 +27,9 @@ public record UserListResDto(
                     user.getFakerId(),
                     user.getName(),
                     user.getEmail(),
-                    user.getStatus().name()
+                    user.getStatus(),
+                    user.getCreatedAt(),
+                    user.getUpdatedAt()
             );
         }
     }
