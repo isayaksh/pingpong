@@ -2,11 +2,14 @@ package org.prography.pingpong.domain.room.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.prography.pingpong.domain.room.dto.*;
+import org.prography.pingpong.domain.room.entity.UserRoom;
 import org.prography.pingpong.domain.room.service.RoomService;
 import org.prography.pingpong.global.common.response.ApiResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -54,8 +57,9 @@ public class RoomController {
     }
 
     @PutMapping("/team/{roomId}")
-    public ApiResponse teamChange(@PathVariable("roomId") int roomId,
+    public ApiResponse changeTeam(@PathVariable("roomId") int roomId,
                                   @RequestBody @Validated TeamChangeReqDto teamChangeReqDto) {
+        roomService.changeTeam(roomId, teamChangeReqDto);
         return ApiResponse.success();
     }
 

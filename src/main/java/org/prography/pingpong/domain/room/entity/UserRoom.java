@@ -13,11 +13,11 @@ public class UserRoom {
     @Column(name="userRoomId")
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "roomId")
     private Room room;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "userId")
     private User user;
 
@@ -35,6 +35,10 @@ public class UserRoom {
 
     public static UserRoom create(Room room, User user, Team team) {
         return new UserRoom(room, user, team);
+    }
+
+    public void changeTeam() {
+        this.team = this.team.equals(Team.RED)? Team.BLUE : Team.RED;
     }
 
     public Integer getId() {

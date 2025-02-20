@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -42,21 +44,25 @@ public class RoomService {
     @Transactional
     public void createRoom(RoomCreateReqDto roomCreateReqDto) {
 
-        //방을 생성하려고 하는 user(userId)의 상태가 활성(ACTIVE)상태일 때만, 방을 생성
+        // 방을 생성하려고 하는 user(userId)의 상태가 활성(ACTIVE)상태일 때만, 방을 생성
         Integer userId = roomCreateReqDto.userId();
-        User findUser = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException("RoomService.createRoom"));
 
-        if(!findUser.getStatus().equals(UserStatus.ACTIVE))
+        if(!user.getStatus().equals(UserStatus.ACTIVE))
             throw new ApiException("RoomService.createRoom");
 
-        //방을 생성하려고 하는 user(userId)가 현재 참여한 방이 있다면, 방생성 X
+        // 방을 생성하려고 하는 user(userId)가 현재 참여한 방이 있다면, 방생성 X
         if(isJoinRoom(userId))
             throw new ApiException("RoomService.createRoom");
 
-         //방은 초기에 대기(WAIT) 상태로 생성
-        Room room = roomCreateReqDto.create(findUser);
+        // 방은 초기에 대기(WAIT) 상태로 생성
+        Room room = roomCreateReqDto.create(user);
         roomRepository.save(room);
+
+        // userRoom 생성
+        UserRoom userRoom = UserRoom.create(room, user, Team.RED);
+        userRoomRepository.save(userRoom);
 
     }
 
@@ -93,16 +99,15 @@ public class RoomService {
 
         // 참가하고자 하는 방(roomId)의 정원이 미달일 때만, 참가가 가능
         int userCount = userRoomRepository.countByRoomId(roomId);
-        System.out.println("userCount : " + userCount);
 
-        if(room.getType().equals(RoomType.SINGLE) && userCount >= 1)
+        if(room.getType().equals(RoomType.SINGLE) && userCount >= 2)
             throw new ApiException("RoomService.attendRoom");
 
-        if(room.getType().equals(RoomType.DOUBLE) && userCount >= 3)
+        if(room.getType().equals(RoomType.DOUBLE) && userCount >= 4)
             throw new ApiException("RoomService.attendRoom");
 
         // userRoom 생성
-        UserRoom userRoom = UserRoom.create(room, user, generateTeam(userCount));
+        UserRoom userRoom = UserRoom.create(room, user, generateTeam(roomId));
         userRoomRepository.save(userRoom);
 
     }
@@ -160,6 +165,47 @@ public class RoomService {
 
     }
 
+    @Transactional
+    public void changeTeam(int roomId, TeamChangeReqDto teamChangeReqDto) {
+
+        // 유저(userId)가 현재 해당 방(roomId)에 참가한 상태에서만 팀 변경이 가능
+        if(!isJoinRoom(teamChangeReqDto.userId()))
+            throw new ApiException("RoomService.changeTeam");
+
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ApiException("RoomService.changeTeam"));
+
+        UserRoom userRoom = userRoomRepository.findByUserId(teamChangeReqDto.userId())
+                .orElseThrow(() -> new ApiException("RoomService.changeTeam"));
+
+        List<UserRoomDto> userRoomList = userRoomRepository.findByRoomId(roomId)
+                .stream()
+                .map(UserRoomDto::create)
+                .collect(Collectors.toList());
+
+        // 변경되려는 팀의 인원이 이미 해당 방 정원의 절반과 같다면 팀이 변경되지 않고 201 응답을 반환
+        if(userRoom.getTeam().equals(Team.RED)) {
+            Long blueCount = userRoomList.stream().filter(ur -> ur.team() == Team.BLUE).count();
+            if(blueCount >= room.getType().getValue()/2)
+                throw new ApiException("RoomService.changeTeam");
+        }
+
+        // 변경되려는 팀의 인원이 이미 해당 방 정원의 절반과 같다면 팀이 변경되지 않고 201 응답을 반환
+        else if(userRoom.getTeam().equals(Team.BLUE)) {
+            Long redCount = userRoomList.stream().filter(ur -> ur.team() == Team.RED).count();
+            if(redCount >= room.getType().getValue()/2)
+                throw new ApiException("RoomService.changeTeam");
+        }
+
+        // 현재 방의 상태가 대기(WAIT) 상태일 때만 팀을 변경할 수 있습니다. 만약 그렇지 않다면 201 응답을 반환
+        if(!room.getStatus().equals(RoomStatus.WAIT))
+            throw new ApiException("RoomService.changeTeam");
+
+        // 유저(userId)가 현재 속한 팀 기준 반대 팀으로 변경
+        userRoom.changeTeam();
+
+    }
+
 
     /*
      * 유저(userId)가 현재 참여한 방이 있는지 확인
@@ -170,8 +216,16 @@ public class RoomService {
         return false;
     }
 
-    private Team generateTeam(Integer userCount) {
-        return (userCount%2 == 0) ? Team.RED : Team.BLUE;
+    private Team generateTeam(Integer roomId) {
+        List<UserRoomDto> userRoomList = userRoomRepository.findByRoomId(roomId)
+                .stream()
+                .map(UserRoomDto::create)
+                .collect(Collectors.toList());
+
+        Long redCount = userRoomList.stream().filter(ur -> ur.team() == Team.RED).count();
+        Long blueCount = userRoomList.stream().filter(ur -> ur.team() == Team.BLUE).count();
+
+        return redCount > blueCount ? Team.BLUE : Team.RED;
     }
 
     @Async
@@ -181,4 +235,5 @@ public class RoomService {
             roomRepository.save(room);
         }, Instant.now().plusSeconds(60));
     }
+
 }
