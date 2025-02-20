@@ -2,6 +2,7 @@ package org.prography.pingpong.global.init.service;
 
 import lombok.RequiredArgsConstructor;
 import org.prography.pingpong.domain.room.repository.RoomRepository;
+import org.prography.pingpong.domain.room.repository.UserRoomRepository;
 import org.prography.pingpong.domain.user.entity.User;
 import org.prography.pingpong.domain.user.repository.UserRepository;
 import org.prography.pingpong.global.exception.ApiException;
@@ -19,6 +20,7 @@ public class InitService {
 
     private final UserRepository userRepository;
     private final RoomRepository roomRepository;
+    private final UserRoomRepository userRoomRepository;
 
     @Transactional
     public void init(Integer seed, Integer quantity) throws Exception {
@@ -26,8 +28,10 @@ public class InitService {
         /*
          * 모든 회원 정보 및 방 정보를 삭제
          */
-        userRepository.deleteAllInBatch();
+        userRoomRepository.deleteAllInBatch();
         roomRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
+
 
         /*
          * 외부 API 호출

@@ -14,5 +14,18 @@ spring:
         show_sql: true
         default_batch_fetch_size: 100
 
+  h2:
+    console:
+      enabled: true   # H2 콘솔 활성화
+      path: /h2-console  # 접속할 경로 설정 (기본값: /h2-console)
+      settings:
+        web-allow-others: true  # 외부 접속 허용 (선택 사항)
+
   jackson:
     default-property-inclusion: non_null  # null 값 필드를 JSON에서 제외
+
+logging:
+  level:
+    org.hibernate.SQL: debug   # SQL 실행 로그 출력
+    org.hibernate.orm.jdbc.bind: trace  # 바인딩된 파라미터 값 출력
+    org.hibernate.type.descriptor.sql: trace  # 추가적인 SQL 타입 정보 출력
