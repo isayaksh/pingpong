@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -160,6 +162,25 @@ public class RoomService {
 
     }
 
+    @Transactional
+    public List<UserRoomDto> changeTeam(int roomId, TeamChangeReqDto teamChangeReqDto) {
+
+        // 유저(userId)가 현재 해당 방(roomId)에 참가한 상태에서만 팀 변경이 가능
+        if(!isJoinRoom(teamChangeReqDto.userId()))
+            throw new ApiException("RoomService.changeTeam");
+
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ApiException("RoomService.changeTeam"));
+
+        List<UserRoomDto> userRoomList = userRoomRepository.findByRoomId(roomId)
+                .stream()
+                .map(UserRoomDto::create)
+                .collect(Collectors.toList());
+
+        return userRoomList;
+
+    }
+
 
     /*
      * 유저(userId)가 현재 참여한 방이 있는지 확인
@@ -181,4 +202,5 @@ public class RoomService {
             roomRepository.save(room);
         }, Instant.now().plusSeconds(60));
     }
+
 }
