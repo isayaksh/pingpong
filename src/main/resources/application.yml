@@ -30,3 +30,10 @@ logging:
     org.hibernate.SQL: debug   # SQL 실행 로그 출력
     org.hibernate.orm.jdbc.bind: trace  # 바인딩된 파라미터 값 출력
     org.hibernate.type.descriptor.sql: trace  # 추가적인 SQL 타입 정보 출력
+
+springdoc:
+  api-docs:
+    enabled: true   # API 문서 활성화
+  swagger-ui:
+    enabled: true   # Swagger UI 활성화
+
